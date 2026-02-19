@@ -1,42 +1,78 @@
 class SharedResource {
-    int item;
-    boolean available = false;
+    private int item;
+    private boolean available = false;
 
-    // TODO: synchronize void put(int item)
-    // while(available) -> wait()
-    // set this.item = item, available = true
-    // print "Produced: " + item
-    // notify()
+    // Produce method
+    public synchronized void produce(int value) throws InterruptedException {
+        while (available) {
+            wait();   // Wait if item not yet consumed
+        }
 
-    // TODO: synchronize void get()
-    // while(!available) -> wait()
-    // print "Consumed: " + item
-    // available = false
-    // notify()
+        item = value;
+        System.out.println("Produced: " + item);
+
+        available = true;
+        notify();     // Notify consumer
+    }
+
+    // Consume method
+    public synchronized void consume() throws InterruptedException {
+        while (!available) {
+            wait();   // Wait if no item produced
+        }
+
+        System.out.println("Consumed: " + item);
+
+        available = false;
+        notify();     // Notify producer
+    }
 }
 
 class Producer extends Thread {
     SharedResource resource;
-    // TODO: Constructor to init resource
-    
-    // TODO: run()
-    // Loop 1 to 5
-    // call resource.put(i)
+
+    Producer(SharedResource resource) {
+        this.resource = resource;
+    }
+
+    public void run() {
+        try {
+            for (int i = 1; i <= 5; i++) {
+                resource.produce(i);
+            }
+        } catch (InterruptedException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 }
 
 class Consumer extends Thread {
     SharedResource resource;
-    // TODO: Constructor to init resource
-    
-    // TODO: run()
-    // Loop 1 to 5
-    // call resource.get()
+
+    Consumer(SharedResource resource) {
+        this.resource = resource;
+    }
+
+    public void run() {
+        try {
+            for (int i = 1; i <= 5; i++) {
+                resource.consume();
+            }
+        } catch (InterruptedException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 }
 
 public class ProducerConsumer {
     public static void main(String[] args) {
-        // TODO: Create SharedResource object
-        // TODO: Create Producer and Consumer threads
-        // TODO: Start both threads
+
+        SharedResource obj = new SharedResource();
+
+        Producer p = new Producer(obj);
+        Consumer c = new Consumer(obj);
+
+        p.start();
+        c.start();
     }
 }
